@@ -26,22 +26,13 @@ MQTT Broker 启用了用户验证功能，客户端在发布或订阅消息前�
 创建新的 MQTT Broker 用户。
 
 ```console
-% ./bin/robust-ctl mqtt user create --username=testp --password=7355608 --is_superuser=false
+% ./bin/robust-ctl mqtt user create --username=testp --password=7355608 --is-superuser
 Created successfully!
 ```
 
-### 2.2 删除用户
+### 2.2 用户列表
 
-删除已有的 MQTT Broker 用户。
-
-```console
-% ./bin/robust-ctl mqtt user delete --username=testp
-Deleted successfully!
-```
-
-### 2.3 用户列表
-
-列出所有已创建的用户。
+获取 MQTT Broker 用户列表。
 
 ```console
 % ./bin/robust-ctl mqtt user list
@@ -50,8 +41,17 @@ Deleted successfully!
 +----------+--------------+
 | admin    | true         |
 +----------+--------------+
-| testp    | false        |
+| testp    | true         |
 +----------+--------------+
+```
+
+### 2.3 删除用户
+
+删除指定的 MQTT Broker 用户。
+
+```console
+% ./bin/robust-ctl mqtt user delete --username=testp
+Deleted successfully!
 ```
 
 ## 3. 发布、订阅消息
@@ -206,11 +206,13 @@ The slow subscription feature has been successfully closed.
 如果我们想要查看慢订阅记录，客户端可以输入如下命令
 
 ```console
-% ./bin/robust-ctl mqtt slow-sub --query=true
+% ./bin/robust-ctl mqtt slow-sub --list
 +-----------+-------+----------+---------+-------------+
 | client_id | topic | sub_name | time_ms | create_time |
 +-----------+-------+----------+---------+-------------+
 ```
+
+### 6.3 排序功能
 
 如果想要获取更多的慢订阅记录，
 并且想要按照从小到大的顺序进行升序排序，
@@ -222,6 +224,8 @@ The slow subscription feature has been successfully closed.
 | client_id | topic | sub_name | time_ms | create_time |
 +-----------+-------+----------+---------+-------------+
 ```
+
+### 6.4 过滤查询功能
 
 对于慢订阅查询，我们同样支持筛选查询功能，我们支持使用 topic,
 sub_name 以及 client_id 的方式来获取不同字段过滤后的结果，
@@ -243,14 +247,14 @@ sub_name 以及 client_id 的方式来获取不同字段过滤后的结果，
 ### 7.1 创建主题重写规则
 
 ```console
-% ./bin/robust-ctl mqtt topic-rewrite create --action=xxx --source-topic=xxx --dest-topic=xxx --regex=xxx
+% ./bin/robust-ctl mqtt topic-rewrite-rule create --action=xxx --source-topic=xxx --dest-topic=xxx --regex=xxx
 Created successfully!
 ```
 
 ### 7.2 删除主题重写规则
 
 ```console
-% ./bin/robust-ctl mqtt topic-rewrite delete --action=xxx --source-topic=xxx
+% ./bin/robust-ctl mqtt topic-rewrite-rule delete --action=xxx --source-topic=xxx
 Deleted successfully!
 ```
 
@@ -261,18 +265,18 @@ Deleted successfully!
 - 开启连接抖动检测
 
 ```console
-% ./bin/robust-ctl mqtt flaping-detect --is-enable=false --window-time=1 --max-client-connections=15 --ban-time=5
+% ./bin/robust-ctl mqtt flapping-detect --enable=true --window-time=1 --max-client-connections=15 --ban-time=5
 The flapping detect feature has been successfully enabled.
 ```
 
 - 关闭连接抖动检测
 
 ```console
-% ./bin/robust-ctl mqtt flaping-detect --is-enable=false
+% ./bin/robust-ctl mqtt flapping-detect --enable=false
 The flapping detect feature has been successfully closed.
 ```
 
-## 9. 连接
+## 9. 连接列表
 
 连接列表命令用于查询 MQTT Broker 当前的连接状态，提供连接 ID、类型、协议、源地址等相关信息。
 
@@ -284,17 +288,181 @@ connection list:
 +---------------+-----------------+----------+-------------+------+
 ```
 
-## 10. 主题
+## 10. 主题列表
 
-查看当前系统中所有订阅的主题。 list-topic 列出所有主题,该命令可用于监视主题的数量和分布。
+主题列表命令用于查询 MQTT Broker 当前的主题状态，提供主题 ID、主题名称、集群名称以及是否包含保留消息等相关信息。
 
 ```console
 % ./bin/robust-ctl mqtt list-topic
 topic list result:
-+----------------------------------+---------------------------------------------------------+--------------+---------------------------+
-| topic_id                         | topic_name                                              | cluster_name | is_contain_retain_message |
-+----------------------------------+---------------------------------------------------------+--------------+---------------------------+
-| b63fc4d3523644e1b1da0149bb376c74 | $SYS/brokers/10.7.141.123/version                       | mqtt-broker  | false                     |
-+----------------------------------+---------------------------------------------------------+--------------+---------------------------+
-......
++----------------------------------+------------------------------------+--------------+---------------------------+
+| topic_id                         | topic_name                         | cluster_name | is_contain_retain_message |
++----------------------------------+------------------------------------+--------------+---------------------------+
+| d586681e0b334dc4909b4189c09d6383 | $SYS/brokers                       | mqtt-broker  | false                     |
++----------------------------------+------------------------------------+--------------+---------------------------+
+| 0da56ebfdec04d21b068373aad57b29c | $SYS/brokers/172.20.10.13/uptime   | mqtt-broker  | false                     |
++----------------------------------+------------------------------------+--------------+---------------------------+
+| 21f81dd57a68436cad4f4ca4405be6cb | $SYS/brokers/172.20.10.13/version  | mqtt-broker  | false                     |
++----------------------------------+------------------------------------+--------------+---------------------------+
+| 9fb1a15794b8475e9d5e07a4fd29b5ae | $SYS/brokers/172.20.10.13/sysdescr | mqtt-broker  | false                     |
++----------------------------------+------------------------------------+--------------+---------------------------+
+| f25b9b1b94944f0b97a118c03b3f72bd | $SYS/brokers/172.20.10.13/datetime | mqtt-broker  | false                     |
++----------------------------------+------------------------------------+--------------+---------------------------+
+```
+
+## 11. 连接器管理
+
+连接器允许 MQTT Broker 与外部系统连接，实现不同平台之间的数据交换。
+
+### 11.1 创建连接器
+
+创建新的连接器。
+
+```console
+% ./bin/robust-ctl mqtt connector create --connector-name=my-connector --connector-type=kafka --config='{"bootstrap_servers":"localhost:9092","topic":"test-topic","key":"test-key"}' --topic-id=1
+Created successfully!
+```
+
+### 11.2 列出连接器
+
+列出系统中的所有连接器。
+
+```console
+% ./bin/robust-ctl mqtt connector list --connector-name=my-connector
+connector list result:
++--------------+----------------+----------------+------------------------------------------------------------------------------+----------+--------+-----------+-------------+-------------+
+| cluster name | connector name | connector type | connector config                                                             | topic id | status | broker id | create time | update time |
++--------------+----------------+----------------+------------------------------------------------------------------------------+----------+--------+-----------+-------------+-------------+
+| mqtt-broker  | my-connector   | Kafka          | {"bootstrap_servers":"localhost:9092","topic":"test-topic","key":"test-key"} | 1        | Idle   | 0         | 1746434176  | 1746434176  |
++--------------+----------------+----------------+------------------------------------------------------------------------------+----------+--------+-----------+-------------+-------------+
+```
+
+### 11.3 更新连接器
+
+更新现有的连接器。
+
+```console
+% ./bin/robust-ctl mqtt connector update --connector='{"cluster_name":"example","connector_name":"my-connector","connector_type":"Kafka","config":"{\"bootstrap_servers\":\"localhost:9092\",\"topic\":\"test-topic-update\",\"key\":\"test-key-update\"}","topic_id":"1","status":"Running","broker_id":null,"create_time":1710000000,"update_time":1710000000}'
+Updated successfully!
+```
+
+### 11.4 删除连接器
+
+删除现有的连接器。
+
+```console
+% ./bin/robust-ctl mqtt connector delete --connector-name=my-connector
+Deleted successfully!
+```
+
+## 12. 模式管理
+
+模式定义了消息的结构和格式，确保数据一致性和验证。
+
+### 12.1 创建模式
+
+创建新的模式。
+
+```console
+% ./bin/robust-ctl mqtt schema create --cluster-name=example --schema-name=temperature_schema --schema-type=json --schema="{\"type\":\"object\",\"properties\":{\"temperature\":{\"type\":\"number\"},\"timestamp\":{\"type\":\"integer\"}}}" -desc="create"
+Created successfully!
+```
+
+### 12.2 列出模式
+
+列出系统中的所有模式。
+
+```console
+% ./bin/robust-ctl mqtt schema list
+schema list result:
+cluster name: example_cluster
+schema name: temperature_schema
+schema type: json
+schema desc: create
+schema: {"type":"object","properties":{"temperature":{"type":"number"},"timestamp":{"type":"integer"}}}
+```
+
+### 12.3 更新模式
+
+更新现有的模式。
+
+```console
+% ./bin/robust-ctl mqtt schema update --cluster-name=example --schema-name=temperature_schema --schema="{\"type\":\"object\",\"properties\":{\"temperature\":{\"type\":\"number\"},\"timestamp\":{\"type\":\"integer\"},\"unit\":{\"type\":\"string\"}}}" --desc="update"
+Updated successfully!
+```
+
+### 12.4 删除模式
+
+删除现有的模式。
+
+```console
+% ./bin/robust-ctl mqtt schema delete --cluster-name=example --schema-name=temperature_schema
+Deleted successfully!
+```
+
+### 12.5 绑定模式
+
+将模式绑定到主题。
+
+```console
+% ./bin/robust-ctl mqtt schema bind --cluster-name=example --schema-name=temperature_schema --topic-id=1
+Created successfully!
+```
+
+### 12.6 解绑模式
+
+从主题解绑模式。
+
+```console
+% ./bin/robust-ctl mqtt schema unbind --cluster-name=example --schema-name=temperature_schema --topic-id=1
+Deleted successfully!
+```
+
+### 12.7 列出绑定的模式
+
+列出所有模式绑定。
+
+```console
+% ./bin/robust-ctl mqtt schema list-bind
+bind schema list result:
+cluster name: example_cluster
+schema name: temperature_schema
+schema type: json
+schema desc: update
+schema: {"type":"object","properties":{"temperature":{"type":"number"},"timestamp":{"type":"integer"}}}
+```
+
+## 13. 自动订阅规则
+
+自动订阅规则允许 Broker 根据预定义规则自动将客户端订阅到特定主题。
+
+### 13.1 设置自动订阅规则
+
+创建或更新自动订阅规则。
+
+```console
+% ./bin/robust-ctl mqtt auto-subscribe-rule set --topic=test/topic --qos=1 --no-local --retain-as-published --retained-handling=1
+Created successfully!
+```
+
+### 13.2 列出自动订阅规则
+
+列出所有自动订阅规则。
+
+```console
+% ./bin/robust-ctl mqtt auto-subscribe-rule list
++------------+-----+----------+---------------------+-------------------+
+| topic      | qos | no_local | retain_as_published | retained_handling |
++------------+-----+----------+---------------------+-------------------+
+| test/topic | 1   | true     | true                | 1                 |
++------------+-----+----------+---------------------+-------------------+
+```
+
+### 13.3 删除自动订阅规则
+
+删除现有的自动订阅规则。
+
+```console
+% ./bin/robust-ctl mqtt auto-subscribe-rule delete --topic=test/topic
+Deleted successfully!
 ```

@@ -23,18 +23,13 @@ MQTT Broker has enabled user authentication. Clients must provide valid username
 Create a new MQTT Broker user.
 
 ```console
-% ./bin/robust-ctl mqtt user create --username=testp --password=7355608 --is_superuser=false
+% ./bin/robust-ctl mqtt user create --username=testp --password=7355608 --is-superuser
 Created successfully!
 ```
 
-### 2.2 Delete User
+### 2.2 List User
 
-```console
-% ./bin/robust-ctl mqtt user delete --username=testp
-Deleted successfully!
-```
-
-### 2.3 List User
+Get MQTT Broker user list
 
 ```console
 % ./bin/robust-ctl mqtt user list
@@ -43,8 +38,17 @@ Deleted successfully!
 +----------+--------------+
 | admin    | true         |
 +----------+--------------+
-| testp    | false        |
+| testp    | true         |
 +----------+--------------+
+```
+
+### 2.3 Delete User
+
+Delete a MQTT Broker user
+
+```console
+% ./bin/robust-ctl mqtt user delete --username=testp
+Deleted successfully!
 ```
 
 ## 3. Pub & Sub
@@ -154,13 +158,12 @@ Deleted successfully!
 
 List all created blacklist rules.
 
-````console
 ```console
 % ./bin/robust-ctl mqtt --server=127.0.0.1:1883 blacklist list
 +----------------+---------------+----------+----------------+
 | blacklist_type | resource_name | end_time | blacklist_type |
 +----------------+---------------+----------+----------------+
-````
+```
 
 ## 6. Slow Subscription
 
@@ -187,7 +190,7 @@ The slow subscription feature has been successfully closed.
 After enabling the slow subscription statistics function, the cluster begins recording slow subscriptions. To query corresponding slow subscription records, clients can enter the following command:
 
 ```console
-% ./bin/robust-ctl mqtt slow-sub --query=true
+% ./bin/robust-ctl mqtt slow-sub --list
 +-----------+-------+----------+---------+-------------+
 | client_id | topic | sub_name | time_ms | create_time |
 +-----------+-------+----------+---------+-------------+
@@ -226,7 +229,7 @@ The topic rewriting feature can help make such business upgrades easier: by sett
 Create a new topic rewrite rule.
 
 ```console
-% ./bin/robust-ctl mqtt topic-rewrite create --action=xxx --source-topic=xxx --dest-topic=xxx --regex=xxx
+% ./bin/robust-ctl mqtt topic-rewrite-rule create --action=xxx --source-topic=xxx --dest-topic=xxx --regex=xxx
 Created successfully!
 ```
 
@@ -235,7 +238,7 @@ Created successfully!
 Delete an existing topic rewrite rule.
 
 ```console
-% ./bin/robust-ctl mqtt topic-rewrite delete --action=xxx --source-topic=xxx
+% ./bin/robust-ctl mqtt topic-rewrite-rule delete --action=xxx --source-topic=xxx
 Deleted successfully!
 ```
 
@@ -246,14 +249,14 @@ Based on the blacklist feature, supports automatically blocking clients that are
 - Enable flapping detection
 
 ```console
-% ./bin/robust-ctl mqtt flaping-detect --is-enable=false --window-time=1 --max-client-connections=15 --ban-time=5
+% ./bin/robust-ctl mqtt flapping-detect --enable=true --window-time=1 --max-client-connections=15 --ban-time=5
 The flapping detect feature has been successfully enabled.
 ```
 
 - Close flapping detection
 
 ```console
-% ./bin/robust-ctl mqtt flaping-detect --is-enable=false
+% ./bin/robust-ctl mqtt flapping-detect --enable=false
 The flapping detect feature has been successfully closed.
 ```
 
@@ -274,12 +277,176 @@ connection list:
 The topic list command is used to query the current topic status of the MQTT Broker. It provides information about the topic name, type, and other relevant details.
 
 ```console
-% ./bin/robust-ctl mqtt list-connection
+% ./bin/robust-ctl mqtt list-topic
 topic list result:
-+----------------------------------+---------------------------------------------------------+--------------+---------------------------+
-| topic_id                         | topic_name                                              | cluster_name | is_contain_retain_message |
-+----------------------------------+---------------------------------------------------------+--------------+---------------------------+
-| b63fc4d3523644e1b1da0149bb376c74 | $SYS/brokers/10.7.141.123/version                       | mqtt-broker  | false                     |
-+----------------------------------+---------------------------------------------------------+--------------+---------------------------+
-......
++----------------------------------+------------------------------------+--------------+---------------------------+
+| topic_id                         | topic_name                         | cluster_name | is_contain_retain_message |
++----------------------------------+------------------------------------+--------------+---------------------------+
+| d586681e0b334dc4909b4189c09d6383 | $SYS/brokers                       | mqtt-broker  | false                     |
++----------------------------------+------------------------------------+--------------+---------------------------+
+| 0da56ebfdec04d21b068373aad57b29c | $SYS/brokers/172.20.10.13/uptime   | mqtt-broker  | false                     |
++----------------------------------+------------------------------------+--------------+---------------------------+
+| 21f81dd57a68436cad4f4ca4405be6cb | $SYS/brokers/172.20.10.13/version  | mqtt-broker  | false                     |
++----------------------------------+------------------------------------+--------------+---------------------------+
+| 9fb1a15794b8475e9d5e07a4fd29b5ae | $SYS/brokers/172.20.10.13/sysdescr | mqtt-broker  | false                     |
++----------------------------------+------------------------------------+--------------+---------------------------+
+| f25b9b1b94944f0b97a118c03b3f72bd | $SYS/brokers/172.20.10.13/datetime | mqtt-broker  | false                     |
++----------------------------------+------------------------------------+--------------+---------------------------+
+```
+
+## 11. Connector Management
+
+Connectors allow MQTT brokers to connect with external systems, enabling data exchange between different platforms.
+
+### 11.1 Create Connector
+
+Create a new connector.
+
+```console
+% ./bin/robust-ctl mqtt connector create --connector-name=my-connector --connector-type=kafka --config='{"bootstrap_servers":"localhost:9092","topic":"test-topic","key":"test-key"}' --topic-id=1
+Created successfully!
+```
+
+### 11.2 List Connectors
+
+List all connectors in the system.
+
+```console
+% ./bin/robust-ctl mqtt connector list --connector-name=my-connector
+connector list result:
++--------------+----------------+----------------+------------------------------------------------------------------------------+----------+--------+-----------+-------------+-------------+
+| cluster name | connector name | connector type | connector config                                                             | topic id | status | broker id | create time | update time |
++--------------+----------------+----------------+------------------------------------------------------------------------------+----------+--------+-----------+-------------+-------------+
+| mqtt-broker  | my-connector   | Kafka          | {"bootstrap_servers":"localhost:9092","topic":"test-topic","key":"test-key"} | 1        | Idle   | 0         | 1746434176  | 1746434176  |
++--------------+----------------+----------------+------------------------------------------------------------------------------+----------+--------+-----------+-------------+-------------+
+```
+
+### 11.3 Update Connector
+
+Update an existing connector.
+
+```console
+% ./bin/robust-ctl mqtt connector update --connector='{"cluster_name":"example","connector_name":"my-connector","connector_type":"Kafka","config":"{\"bootstrap_servers\":\"localhost:9092\",\"topic\":\"test-topic-update\",\"key\":\"test-key-update\"}","topic_id":"1","status":"Running","broker_id":null,"create_time":1710000000,"update_time":1710000000}'
+Updated successfully!
+```
+
+### 11.4 Delete Connector
+
+Delete an existing connector.
+
+```console
+% ./bin/robust-ctl mqtt connector delete --connector-name=my-connector
+Deleted successfully!
+```
+
+## 12. Schema Management
+
+Schemas define the structure and format of messages, ensuring data consistency and validation.
+
+### 12.1 Create Schema
+
+Create a new schema.
+
+```console
+% ./bin/robust-ctl mqtt schema create --schema-name=temperature_schema --schema-type=json --schema="{\"type\":\"object\",\"properties\":{\"temperature\":{\"type\":\"number\"},\"timestamp\":{\"type\":\"integer\"}}}" --desc="create"
+Created successfully!
+```
+
+### 12.2 List Schemas
+
+List all schemas in the system.
+
+```console
+% ./bin/robust-ctl mqtt schema list
+schema list result:
+cluster name: example_cluster
+schema name: temperature_schema
+schema type: json
+schema desc: create
+schema: {"type":"object","properties":{"temperature":{"type":"number"},"timestamp":{"type":"integer"}}}
+```
+
+### 12.3 Update Schema
+
+Update an existing schema.
+
+```console
+% ./bin/robust-ctl mqtt schema update --schema-name=temperature_schema --schema="{\"type\":\"object\",\"properties\":{\"temperature\":{\"type\":\"number\"},\"timestamp\":{\"type\":\"integer\"},\"unit\":{\"type\":\"string\"}}}" --desc="update"
+Updated successfully!
+```
+
+### 12.4 Delete Schema
+
+Delete an existing schema.
+
+```console
+% ./bin/robust-ctl mqtt schema delete --schema-name=temperature_schema
+Deleted successfully!
+```
+
+### 12.5 Bind Schema
+
+Bind a schema to a topic.
+
+```console
+% ./bin/robust-ctl mqtt schema bind --schema-name=temperature_schema --resource-name=test
+Created successfully!
+```
+
+### 12.6 Unbind Schema
+
+Unbind a schema from a topic.
+
+```console
+% ./bin/robust-ctl mqtt schema unbind --schema-name=temperature_schema --resource-name=test
+Deleted successfully!
+```
+
+### 12.7 List Bind Schemas
+
+List all schema bindings.
+
+```console
+% ./bin/robust-ctl mqtt schema list-bind
+bind schema list result:
+cluster name: example_cluster
+schema name: temperature_schema
+schema type: json
+schema desc: update
+schema: {"type":"object","properties":{"temperature":{"type":"number"},"timestamp":{"type":"integer"}}}
+```
+
+## 13. Auto Subscribe Rules
+
+Auto subscribe rules allow the broker to automatically subscribe clients to specific topics based on predefined rules.
+
+### 13.1 Set Auto Subscribe Rule
+
+Create or update an auto subscribe rule.
+
+```console
+% ./bin/robust-ctl mqtt auto-subscribe-rule set --topic=test/topic --qos=1 --no-local --retain-as-published --retained-handling=1
+Created successfully!
+```
+
+### 13.2 List Auto Subscribe Rules
+
+List all auto subscribe rules.
+
+```console
+% ./bin/robust-ctl mqtt auto-subscribe-rule list
++------------+-----+----------+---------------------+-------------------+
+| topic      | qos | no_local | retain_as_published | retained_handling |
++------------+-----+----------+---------------------+-------------------+
+| test/topic | 1   | true     | true                | 1                 |
++------------+-----+----------+---------------------+-------------------+
+```
+
+### 13.3 Delete Auto Subscribe Rule
+
+Delete an existing auto subscribe rule.
+
+```console
+% ./bin/robust-ctl mqtt auto-subscribe-rule delete --topic=test/topic
+Deleted successfully!
 ```

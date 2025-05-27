@@ -25,8 +25,11 @@ use protocol::broker_mqtt::broker_mqtt_admin::{
     CreateAclRequest, CreateBlacklistRequest, CreateTopicRewriteRuleRequest, CreateUserRequest,
     DeleteAclRequest, DeleteAutoSubscribeRuleRequest, DeleteBlacklistRequest,
     DeleteTopicRewriteRuleRequest, DeleteUserRequest, ListAutoSubscribeRuleRequest,
-    MqttCreateConnectorRequest, MqttDeleteConnectorRequest, MqttListConnectorRequest,
-    MqttUpdateConnectorRequest, SetAutoSubscribeRuleRequest, SetClusterConfigRequest,
+    MqttBindSchemaRequest, MqttConnectorType, MqttCreateConnectorRequest, MqttCreateSchemaRequest,
+    MqttDeleteConnectorRequest, MqttDeleteSchemaRequest, MqttListBindSchemaRequest,
+    MqttListConnectorRequest, MqttListSchemaRequest, MqttUnbindSchemaRequest,
+    MqttUpdateConnectorRequest, MqttUpdateSchemaRequest, SetAutoSubscribeRuleRequest,
+    SetClusterConfigRequest,
 };
 
 // security: user feat
@@ -56,7 +59,7 @@ pub(crate) struct CreateUserArgs {
     pub(crate) username: String,
     #[arg(short, long, required = true)]
     pub(crate) password: String,
-    #[arg(short, long, default_value_t = false)]
+    #[arg(short, long, default_value_t = false, value_parser = clap::builder::BoolishValueParser::new(), require_equals = true)]
     pub(crate) is_superuser: bool,
 }
 
@@ -339,13 +342,13 @@ pub enum ConnectorActionType {
 #[command(author = "RobustMQ", about = "action: create connector", long_about = None)]
 #[command(next_line_help = true)]
 pub(crate) struct CreateConnectorArgs {
-    #[arg(short, long, required = true)]
+    #[arg(short = 'n', long, required = true)]
     pub(crate) connector_name: String,
-    #[arg(short, long, required = true)]
+    #[arg(short = 't', long, required = true)]
     pub(crate) connector_type: String,
-    #[arg(short, long, required = true)]
+    #[arg(short = 'c', long, required = true)]
     pub(crate) config: String,
-    #[arg(short, long, required = true)]
+    #[arg(short = 'i', long, required = true)]
     pub(crate) topic_id: String,
 }
 
@@ -374,20 +377,51 @@ pub(crate) struct UpdateConnectorArgs {
 }
 
 // schema
+#[derive(clap::Args, Debug)]
+#[command(author = "RobustMQ", about = "related operations of mqtt schemas, such as listing, creating, updating, deleting, binding and unbinding", long_about = None)]
+#[command(next_line_help = true)]
+pub(crate) struct SchemaArgs {
+    #[command(subcommand)]
+    pub action: SchemaActionType,
+}
+
+#[derive(Debug, clap::Subcommand)]
+pub enum SchemaActionType {
+    #[command(author = "RobustMQ", about = "action: list schemas", long_about = None)]
+    List(ListSchemaArgs),
+    #[command(author = "RobustMQ", about = "action: create schema", long_about = None)]
+    Create(CreateSchemaArgs),
+    #[command(author = "RobustMQ", about = "action: update schema", long_about = None)]
+    Update(UpdateSchemaArgs),
+    #[command(author = "RobustMQ", about = "action: delete schema", long_about = None)]
+    Delete(DeleteSchemaArgs),
+    #[command(author = "RobustMQ", about = "action: list bind schemas", long_about = None)]
+    ListBind(ListBindSchemaArgs),
+    #[command(author = "RobustMQ", about = "action: bind schema", long_about = None)]
+    Bind(BindSchemaArgs),
+    #[command(author = "RobustMQ", about = "action: unbind schema", long_about = None)]
+    Unbind(UnbindSchemaArgs),
+}
+
 #[derive(Debug, Parser)]
 #[command(author="RobustMQ", about="", long_about = None)]
 #[command(next_line_help = true)]
 pub(crate) struct ListSchemaArgs {
-    pub(crate) schema_name: String,
+    #[arg(short, long)]
+    pub(crate) schema_name: Option<String>,
 }
 
 #[derive(Debug, Parser)]
 #[command(author="RobustMQ", about="", long_about = None)]
 #[command(next_line_help = true)]
 pub(crate) struct CreateSchemaArgs {
+    #[arg(short = 'n', long, required = true)]
     pub(crate) schema_name: String,
+    #[arg(short = 't', long, required = true)]
     pub(crate) schema_type: String,
+    #[arg(short = 's', long, required = true)]
     pub(crate) schema: String,
+    #[arg(short = 'd', long, required = true)]
     pub(crate) desc: String,
 }
 
@@ -395,9 +429,13 @@ pub(crate) struct CreateSchemaArgs {
 #[command(author="RobustMQ", about="", long_about = None)]
 #[command(next_line_help = true)]
 pub(crate) struct UpdateSchemaArgs {
+    #[arg(short = 'n', long, required = true)]
     pub(crate) schema_name: String,
+    #[arg(short = 't', long, required = true)]
     pub(crate) schema_type: String,
+    #[arg(short = 's', long, required = true)]
     pub(crate) schema: String,
+    #[arg(short = 'd', long, required = true)]
     pub(crate) desc: String,
 }
 
@@ -405,6 +443,7 @@ pub(crate) struct UpdateSchemaArgs {
 #[command(author="RobustMQ", about="", long_about = None)]
 #[command(next_line_help = true)]
 pub(crate) struct DeleteSchemaArgs {
+    #[arg(short, long, required = true)]
     pub(crate) schema_name: String,
 }
 
@@ -412,7 +451,9 @@ pub(crate) struct DeleteSchemaArgs {
 #[command(author="RobustMQ", about="", long_about = None)]
 #[command(next_line_help = true)]
 pub(crate) struct ListBindSchemaArgs {
+    #[arg(short, long, required = true)]
     pub(crate) schema_name: String,
+    #[arg(short, long, required = true)]
     pub(crate) resource_name: String,
 }
 
@@ -420,7 +461,9 @@ pub(crate) struct ListBindSchemaArgs {
 #[command(author="RobustMQ", about="", long_about = None)]
 #[command(next_line_help = true)]
 pub(crate) struct BindSchemaArgs {
+    #[arg(short, long, required = true)]
     pub(crate) schema_name: String,
+    #[arg(short, long, required = true)]
     pub(crate) resource_name: String,
 }
 
@@ -428,7 +471,9 @@ pub(crate) struct BindSchemaArgs {
 #[command(author="RobustMQ", about="", long_about = None)]
 #[command(next_line_help = true)]
 pub(crate) struct UnbindSchemaArgs {
+    #[arg(short, long, required = true)]
     pub(crate) schema_name: String,
+    #[arg(short, long, required = true)]
     pub(crate) resource_name: String,
 }
 
@@ -506,9 +551,14 @@ pub fn process_connector_args(args: ConnectorArgs) -> MqttActionType {
             connector_name: arg.connector_name,
         }),
         ConnectorActionType::Create(arg) => {
+            let connector_type = match arg.connector_type.to_lowercase().as_str() {
+                "kafka" => MqttConnectorType::Kafka,
+                "file" => MqttConnectorType::File,
+                _ => panic!("Invalid connector type: {}", arg.connector_type),
+            };
             MqttActionType::CreateConnector(MqttCreateConnectorRequest {
                 connector_name: arg.connector_name,
-                connector_type: arg.connector_type.parse().unwrap(),
+                connector_type: connector_type as i32,
                 config: arg.config,
                 topic_id: arg.topic_id,
             })
@@ -542,6 +592,44 @@ pub fn process_topic_rewrite_args(args: TopicRewriteArgs) -> MqttActionType {
                 source_topic: arg.source_topic,
             })
         }
+    }
+}
+
+pub fn process_schema_args(args: SchemaArgs) -> MqttActionType {
+    println!("process_schema_args args: {:?}", args);
+    match args.action {
+        SchemaActionType::Create(arg) => MqttActionType::CreateSchema(MqttCreateSchemaRequest {
+            schema_name: arg.schema_name,
+            schema_type: arg.schema_type,
+            schema: arg.schema,
+            desc: arg.desc,
+        }),
+        SchemaActionType::List(arg) => MqttActionType::ListSchema(MqttListSchemaRequest {
+            schema_name: arg.schema_name.unwrap_or_default(),
+        }),
+        SchemaActionType::Update(arg) => MqttActionType::UpdateSchema(MqttUpdateSchemaRequest {
+            schema_name: arg.schema_name,
+            schema_type: arg.schema_type,
+            schema: arg.schema,
+            desc: arg.desc,
+        }),
+        SchemaActionType::Delete(arg) => MqttActionType::DeleteSchema(MqttDeleteSchemaRequest {
+            schema_name: arg.schema_name,
+        }),
+        SchemaActionType::ListBind(arg) => {
+            MqttActionType::ListBindSchema(MqttListBindSchemaRequest {
+                schema_name: arg.schema_name,
+                resource_name: arg.resource_name,
+            })
+        }
+        SchemaActionType::Bind(arg) => MqttActionType::BindSchema(MqttBindSchemaRequest {
+            schema_name: arg.schema_name,
+            resource_name: arg.resource_name,
+        }),
+        SchemaActionType::Unbind(arg) => MqttActionType::UnbindSchema(MqttUnbindSchemaRequest {
+            schema_name: arg.schema_name,
+            resource_name: arg.resource_name,
+        }),
     }
 }
 
